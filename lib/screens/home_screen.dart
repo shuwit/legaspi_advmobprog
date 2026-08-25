@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'product_screen.dart';
+import 'cart_screen.dart'; // Enhancement 1 Legaspi
 import '../widgets/custom_text.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -31,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 )
               : CustomText(
                   text: (_selectedIndex == 1)
-                      ? 'Chat'
+                      ? 'Cart' // Enhancement 1 Legaspi
                       : (_selectedIndex == 2)
                           ? 'Profile'
                           : 'Home',
@@ -50,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
           controller: _pageController,
           children: const <Widget>[
             ProductScreen(),
-            Center(child: Text('Chat Screen')),
+            CartScreen(), // Enhancement 1 Legaspi
             Center(child: Text('Profile Screen')),
           ],
           onPageChanged: (page) {
@@ -65,11 +66,21 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: _onTappedBar,
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.shop_2), label: 'Shop'),
-            BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
+            BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Cart'), // Enhancement 1 Legaspi
             BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
           ],
           currentIndex: _selectedIndex,
         ),
+        // Enhancement 2 Legaspi: FloatingActionButton for Chat
+        floatingActionButton: _selectedIndex == 1
+            ? null
+            : FloatingActionButton(
+                onPressed: () {
+                  // Chat action
+                },
+                backgroundColor: Colors.amber,
+                child: const Icon(Icons.chat, color: Colors.black87),
+              ),
       ),
     );
   }

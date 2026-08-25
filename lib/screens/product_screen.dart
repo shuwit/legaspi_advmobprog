@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/product_model.dart';
 import '../services/product_service.dart';
 import '../widgets/custom_text.dart';
-import 'product_details_screen.dart'; // Enhancement 2 import
+import 'product_details_screen.dart';
 
 class ProductScreen extends StatefulWidget {
   const ProductScreen({super.key});
@@ -17,7 +17,7 @@ class _ProductScreenState extends State<ProductScreen> {
   List<Product> _allProducts = [];
   List<Product> _filteredProducts = [];
 
-  // Enhancement 1: Add search bar state Legaspi
+
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -32,7 +32,7 @@ class _ProductScreenState extends State<ProductScreen> {
     });
   }
 
-  // Enhancement 1 logic Legaspi
+
   void _filterProducts(String query) {
     setState(() {
       if (query.isEmpty) {
@@ -53,7 +53,7 @@ class _ProductScreenState extends State<ProductScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Enhancement 1: Add search bar above the article list. Legaspi
+
             TextField(
               controller: _searchController,
               onChanged: _filterProducts,
@@ -108,7 +108,7 @@ class _ProductScreenState extends State<ProductScreen> {
                     itemBuilder: (context, index) {
                       final product = _filteredProducts[index];
                       return GestureDetector(
-                        // Enhancement 2: Add details page when clicked the card. (Added gesture detector for navigation) Legaspi
+
                         onTap: () {
                           Navigator.push(
                             context,

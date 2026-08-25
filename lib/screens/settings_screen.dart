@@ -15,7 +15,7 @@ class SettingsScreen extends StatelessWidget {
       ),
       body: ListView(
         children: [
-          // Enhancement 3: Add settings page to move the dark/light mode switch. (Added switch tile for theme) Legaspi
+
           SwitchListTile(
             title: const Text('Dark Mode'),
             value: themeProvider.isDark,
