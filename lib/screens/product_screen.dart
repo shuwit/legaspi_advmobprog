@@ -16,7 +16,7 @@ class _ProductScreenState extends State<ProductScreen> {
   late final Future<List<Product>> _productsFuture;
   List<Product> _allProducts = [];
   List<Product> _filteredProducts = [];
-  
+
   // Enhancement 1: Add search bar state Legaspi
   final TextEditingController _searchController = TextEditingController();
 
@@ -63,7 +63,10 @@ class _ProductScreenState extends State<ProductScreen> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16.w,
+                  vertical: 12.h,
+                ),
               ),
             ),
             SizedBox(height: 16.h),
@@ -72,9 +75,7 @@ class _ProductScreenState extends State<ProductScreen> {
                 future: _productsFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
+                    return const Center(child: CircularProgressIndicator());
                   }
 
                   if (snapshot.hasError) {
@@ -112,7 +113,8 @@ class _ProductScreenState extends State<ProductScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ProductDetailsScreen(product: product),
+                              builder: (context) =>
+                                  ProductDetailsScreen(product: product),
                             ),
                           );
                         },
@@ -148,7 +150,8 @@ class _ProductScreenState extends State<ProductScreen> {
                                     ),
                                     SizedBox(height: 4.h),
                                     CustomText(
-                                      text: '\$\${product.price.toStringAsFixed(2)}',
+                                      text:
+                                          '\$\${product.price.toStringAsFixed(2)}',
                                       fontSize: 13.sp,
                                       fontWeight: FontWeight.w600,
                                     ),
