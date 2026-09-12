@@ -66,7 +66,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               SizedBox(height: 24.h),
               CustomText(
-                text: 'NUBD Exchange',
+                text: 'Facebook Replication', // Enhancement 1 Legaspi
                 fontSize: 22.sp,
                 fontWeight: FontWeight.w600,
                 textAlign: TextAlign.center,

@@ -4,9 +4,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constants.dart';
 import '../models/user.dart';
 
+// Enhancement 1 Legaspi: authenticate user and save with shared_preferences
 class UserService {
   Map<String, dynamic> data = {};
 
+  // Enhancement 1 Legaspi
   Future<Map<String, dynamic>> loginUser(String username, String password) async {
     final response = await post(
       Uri.parse('$host/auth/login'),

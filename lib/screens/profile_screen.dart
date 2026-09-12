@@ -1,10 +1,15 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../models/post.dart';
 import '../models/user.dart';
+import '../services/post_service.dart';
 import '../services/user_service.dart';
-import '../widgets/custom_text.dart';
+import '../widgets/custom_font.dart';
+import '../widgets/post_card.dart';
+import 'detail_screen.dart';
 
-// Enhancement 3 Legaspi
+// Enhancement 2 Legaspi
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -13,208 +18,168 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Enhancement 3 Legaspi
+  // Enhancement 1 / 2 Legaspi
   final UserService _userService = UserService();
+  final PostService _postService = PostService();
   late Future<User> _userFuture;
+  Future<List<Post>>? _postsFuture;
 
   @override
   void initState() {
     super.initState();
-    // Enhancement 3 Legaspi
     _userFuture = _userService.getUser();
+    // Enhancement 2 Legaspi: load posts by saved user id
+    _loadUserPosts();
   }
 
-  // Enhancement 3 Legaspi
-  Future<void> _logout() async {
-    try {
-      await _userService.logout();
-      if (!mounted) return;
-      Navigator.pushNamedAndRemoveUntil(context, '/signin', (route) => false);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Logout failed: $e')),
-      );
-    }
+  // Enhancement 2 Legaspi
+  Future<void> _loadUserPosts() async {
+    final userData = await _userService.getUserData();
+    final userId = userData['id'] as int? ?? 0;
+    setState(() {
+      _postsFuture = _postService.getPostsByUserId(userId);
+    });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // Enhancement 3 Legaspi: custom profile UI
-    return SafeArea(
-      child: FutureBuilder<User>(
-        future: _userFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: CustomText(
-                text: 'Error: ${snapshot.error}',
-                fontSize: 14.sp,
-              ),
-            );
-          }
-
-          final user = snapshot.data!;
-
-          return SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-            child: Column(
-              children: [
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 16.w),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      CircleAvatar(
-                        radius: 48.r,
-                        backgroundColor: Colors.grey.shade200,
-                        backgroundImage: user.image.isNotEmpty
-                            ? NetworkImage(user.image)
-                            : null,
-                        child: user.image.isEmpty
-                            ? Icon(Icons.person, size: 48.sp)
-                            : null,
-                      ),
-                      SizedBox(height: 16.h),
-                      CustomText(
-                        text: user.fullName,
-                        fontSize: 20.sp,
-                        fontWeight: FontWeight.bold,
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 4.h),
-                      CustomText(
-                        text: '@${user.username}',
-                        fontSize: 14.sp,
-                        color: const Color(0xFFFFC107),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 16.h),
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      _ProfileInfoRow(
-                        icon: Icons.email_outlined,
-                        label: 'Email',
-                        value: user.email,
-                      ),
-                      Divider(height: 1.h, color: Colors.grey.shade200),
-                      _ProfileInfoRow(
-                        icon: Icons.wc_outlined,
-                        label: 'Gender',
-                        value: user.gender,
-                      ),
-                      Divider(height: 1.h, color: Colors.grey.shade200),
-                      _ProfileInfoRow(
-                        icon: Icons.badge_outlined,
-                        label: 'User ID',
-                        value: '#${user.id}',
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 24.h),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50.h,
-                  child: ElevatedButton.icon(
-                    onPressed: _logout,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF5252),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                    ),
-                    icon: Icon(Icons.logout, color: Colors.white, size: 20.sp),
-                    label: CustomText(
-                      text: 'Log Out',
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+  void _openPost(Post post) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => DetailScreen(post: post)),
     );
   }
-}
-
-// Enhancement 3 Legaspi
-class _ProfileInfoRow extends StatelessWidget {
-  const _ProfileInfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-      child: Row(
-        children: [
-          Icon(icon, color: const Color(0xFFFFC107), size: 22.sp),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CustomText(
-                  text: label,
-                  fontSize: 12.sp,
-                  color: Colors.grey,
+    return FutureBuilder<User>(
+      future: _userFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: CustomFont(text: 'Error: ${snapshot.error}', fontSize: 14),
+          );
+        }
+
+        final user = snapshot.data!;
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            setState(() {
+              _userFuture = _userService.getUser();
+            });
+            await _loadUserPosts();
+          },
+          child: ListView(
+            padding: EdgeInsets.only(bottom: 80.h),
+            children: [
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 16.w),
+                color: const Color(0xFF1877F2),
+                child: Column(
+                  children: [
+                    CircleAvatar(
+                      radius: 48.r,
+                      backgroundColor: Colors.white,
+                      backgroundImage: user.image.isNotEmpty
+                          ? CachedNetworkImageProvider(user.image)
+                          : null,
+                      child: user.image.isEmpty
+                          ? Icon(Icons.person, size: 48.sp, color: Colors.grey)
+                          : null,
+                    ),
+                    SizedBox(height: 12.h),
+                    CustomFont(
+                      text: user.fullName,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 4.h),
+                    CustomFont(
+                      text: '@${user.username}',
+                      fontSize: 13,
+                      color: Colors.white70,
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 8.h),
+                    CustomFont(
+                      text: user.email,
+                      fontSize: 12,
+                      color: Colors.white70,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                SizedBox(height: 2.h),
-                CustomText(
-                  text: value,
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w500,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 8.h),
+                child: CustomFont(
+                  text: 'My Posts', // Enhancement 2 Legaspi
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
-            ),
+              ),
+              // Enhancement 2 Legaspi: render posts by userId
+              if (_postsFuture == null)
+                const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else
+                FutureBuilder<List<Post>>(
+                  future: _postsFuture,
+                  builder: (context, postSnapshot) {
+                    if (postSnapshot.connectionState == ConnectionState.waiting) {
+                      return Padding(
+                        padding: EdgeInsets.all(24.r),
+                        child: const Center(child: CircularProgressIndicator()),
+                      );
+                    }
+
+                    if (postSnapshot.hasError) {
+                      return Padding(
+                        padding: EdgeInsets.all(16.r),
+                        child: CustomFont(
+                          text: 'Error loading posts: ${postSnapshot.error}',
+                          fontSize: 13,
+                        ),
+                      );
+                    }
+
+                    final posts = postSnapshot.data ?? [];
+                    if (posts.isEmpty) {
+                      return Padding(
+                        padding: EdgeInsets.all(16.r),
+                        child: const CustomFont(
+                          text: 'No posts found for this user.',
+                          fontSize: 13,
+                          color: Colors.grey,
+                        ),
+                      );
+                    }
+
+                    return Column(
+                      children: posts.map((post) {
+                        return PostCard(
+                          post: post,
+                          authorName: user.fullName,
+                          authorImage: user.image,
+                          onTap: () => _openPost(post),
+                          onComment: () => _openPost(post),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

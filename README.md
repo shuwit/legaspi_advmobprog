@@ -46,3 +46,21 @@ This lab updates the architecture with **persistent authentication** using `shar
 
 ### Using Saved Data to Render Cart by User ID
 After login, the user’s `id` is stored locally. On `cart_screen`, the app no longer hardcodes a user id. It calls `UserService.getUserData()`, reads the saved `id`, and passes that value to `CartService.getCartByUserId(userId)`. That means the cart endpoint (`/carts/user/:userId`) is driven by the authenticated user’s saved identity—for example, signing in as `emilys` (id `1`) loads that user’s cart from DummyJSON.
+
+## Long Exam 1: Discussion
+
+### How Models, Services, and Screens Interact
+Long Exam 1 builds a Facebook-style app on DummyJSON (`https://dummyjson.com/`) using the same layered pattern:
+
+- **Models**: `user.dart` maps auth/profile data; `post.dart` maps post JSON (including reactions); `comment.dart` maps comment JSON and nested user info.
+- **Services**: `UserService` authenticates and persists the session; `PostService` loads the newsfeed (`/posts`) and profile posts (`/posts/user/:userId`); `CommentService` loads and adds comments (`/comments/post/:postId`, `/comments/add`).
+- **Screens**: Splash/sign-in gate the app using saved tokens. `NewsfeedScreen` renders all posts. `ProfileScreen` loads the saved user, then renders that user’s posts. `DetailScreen` shows one post with its comments, a clickable like action, and an add-comment form. `SettingsScreen` holds theme preference and Sign Out.
+
+Flow for profile posts: login saves `userId` → Profile calls `getPostsByUserId(savedId)` → `PostCard` widgets render the API result.
+
+### Updated Design Pattern
+The exam extends Model–Service–Screen with **persistent authentication** and **feature modules** (posts + comments). Splash restores session state from `SharedPreferences`. Provider still manages theme preference on Settings, while auth/session stays in `UserService`. Reusable widgets such as `PostCard` keep like/comment UI consistent across newsfeed, profile, and detail.
+
+### Posts, Comments, and Likes
+Posts on the profile come from the saved user id, not a hardcoded value. Opening a post loads comments for that post id. The like button updates local like state when tapped. Adding a comment sends `body`, `postId`, and the saved `userId` to DummyJSON’s add-comment endpoint, then refreshes the comment list.
+

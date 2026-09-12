@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/splash_screen.dart'; // Enhancement 1 Legaspi
-import 'screens/signin_screen.dart'; // Enhancement 2 Legaspi
+import 'screens/signin_screen.dart'; // Enhancement 1 Legaspi
 import 'providers/theme_provider.dart';
 
 void main() async {
@@ -16,7 +16,7 @@ void main() async {
     (_) async {
       await dotenv.load(fileName: 'assets/.env');
       runApp(const LegaspiAdvMobProg());
-    }
+    },
   );
 }
 
@@ -35,17 +35,24 @@ class LegaspiAdvMobProg extends StatelessWidget {
           final themeModel = build.watch<ThemeProvider>();
           return MaterialApp(
             debugShowCheckedModeBanner: false,
-            theme: themeModel.lightTheme,
-            darkTheme: themeModel.darkTheme,
+            theme: themeModel.lightTheme.copyWith(
+              colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1877F2)),
+            ),
+            darkTheme: themeModel.darkTheme.copyWith(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: const Color(0xFF1877F2),
+                brightness: Brightness.dark,
+              ),
+            ),
             themeMode: themeModel.isDark ? ThemeMode.dark : ThemeMode.light,
-            title: 'NUBD Exchange',
-            // Enhancement 1 Legaspi: start at splash for persistent auth
+            title: 'Facebook Replication',
+            // Enhancement 1 Legaspi
             initialRoute: '/',
             routes: {
               '/': (context) => const SplashScreen(), // Enhancement 1 Legaspi
-              '/signin': (context) => const SignInScreen(), // Enhancement 2 Legaspi
+              '/signin': (context) => const SignInScreen(), // Enhancement 1 Legaspi
               '/home': (context) => const HomeScreen(),
-              '/settings': (context) => const SettingsScreen(),
+              '/settings': (context) => const SettingsScreen(), // Enhancement 2 Legaspi
             },
           );
         },
