@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/splash_screen.dart'; // Enhancement 1 Legaspi
+import 'screens/signin_screen.dart'; // Enhancement 2 Legaspi
 import 'providers/theme_provider.dart';
 
 void main() async {
@@ -36,9 +38,12 @@ class LegaspiAdvMobProg extends StatelessWidget {
             theme: themeModel.lightTheme,
             darkTheme: themeModel.darkTheme,
             themeMode: themeModel.isDark ? ThemeMode.dark : ThemeMode.light,
-            title: 'E-Commerce App',
-            initialRoute: '/home',
+            title: 'NUBD Exchange',
+            // Enhancement 1 Legaspi: start at splash for persistent auth
+            initialRoute: '/',
             routes: {
+              '/': (context) => const SplashScreen(), // Enhancement 1 Legaspi
+              '/signin': (context) => const SignInScreen(), // Enhancement 2 Legaspi
               '/home': (context) => const HomeScreen(),
               '/settings': (context) => const SettingsScreen(),
             },

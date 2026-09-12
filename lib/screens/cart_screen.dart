@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/cart.dart';
 import '../services/cart_service.dart';
 import '../services/product_service.dart';
+import '../services/user_service.dart'; // Enhancement 3 Legaspi
 import '../widgets/custom_text.dart';
 import 'product_details_screen.dart';
 
@@ -19,12 +20,23 @@ class _CartScreenState extends State<CartScreen> {
   late Future<Cart> _cartFuture;
   final CartService _cartService = CartService();
   final ProductService _productService = ProductService();
+  final UserService _userService = UserService(); // Enhancement 3 Legaspi
 
   @override
   void initState() {
     super.initState();
-    // Enhancement 3 Legaspi: fetch cart by user id 5
-    _cartFuture = _cartService.getCartByUserId(5);
+    // Enhancement 3 Legaspi: fetch cart using saved user id
+    _cartFuture = _loadCartBySavedUser();
+  }
+
+  // Enhancement 3 Legaspi
+  Future<Cart> _loadCartBySavedUser() async {
+    final userData = await _userService.getUserData();
+    final userId = userData['id'] as int? ?? 0;
+    if (userId <= 0) {
+      throw Exception('No saved user id found. Please sign in again.');
+    }
+    return _cartService.getCartByUserId(userId);
   }
 
   void _navigateToDetailScreen(int productId) async {
