@@ -1,13 +1,16 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
+import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
-import 'screens/splash_screen.dart'; // Enhancement 1 Legaspi
-import 'screens/signin_screen.dart'; // Enhancement 1 Legaspi
+import 'screens/splash_screen.dart';
+import 'screens/signin_screen.dart';
+import 'screens/signup_screen.dart'; // Enhancement 2 Legaspi
 import 'providers/theme_provider.dart';
 
 void main() async {
@@ -15,6 +18,10 @@ void main() async {
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then(
     (_) async {
       await dotenv.load(fileName: 'assets/.env');
+      // Enhancement 1 Legaspi: Initialize Firebase
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
       runApp(const LegaspiAdvMobProg());
     },
   );
@@ -46,13 +53,13 @@ class LegaspiAdvMobProg extends StatelessWidget {
             ),
             themeMode: themeModel.isDark ? ThemeMode.dark : ThemeMode.light,
             title: 'Facebook Replication',
-            // Enhancement 1 Legaspi
             initialRoute: '/',
             routes: {
-              '/': (context) => const SplashScreen(), // Enhancement 1 Legaspi
-              '/signin': (context) => const SignInScreen(), // Enhancement 1 Legaspi
+              '/': (context) => const SplashScreen(),
+              '/signin': (context) => const SignInScreen(),
+              '/signup': (context) => const SignUpScreen(), // Enhancement 2 Legaspi
               '/home': (context) => const HomeScreen(),
-              '/settings': (context) => const SettingsScreen(), // Enhancement 2 Legaspi
+              '/settings': (context) => const SettingsScreen(),
             },
           );
         },

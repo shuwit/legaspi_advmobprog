@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../models/login_type.dart';
 import '../services/user_service.dart';
 import '../widgets/custom_text.dart';
 
@@ -18,6 +19,8 @@ class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  // Enhancement 2 Legaspi: DummyJSON vs Firebase
+  LoginType _loginType = LoginType.dummyJson;
 
   @override
   void dispose() {
@@ -34,13 +37,23 @@ class _SignInScreenState extends State<SignInScreen> {
     });
     if (_formKey.currentState!.validate()) {
       try {
-        final response = await userService.loginUser(
-          _usernameController.text,
-          _passwordController.text,
-        );
+        Map<String, dynamic> response;
 
-        // Save user data to SharedPreferences
-        await userService.saveUserData(response);
+        if (_loginType == LoginType.firebase) {
+          // Enhancement 2 Legaspi: Firebase Auth SDK
+          await userService.signIn(
+            email: _usernameController.text.trim(),
+            password: _passwordController.text,
+          );
+          response = await userService.getUserData();
+        } else {
+          // Enhancement 2 Legaspi: DummyJSON API
+          response = await userService.loginUser(
+            _usernameController.text.trim(),
+            _passwordController.text,
+          );
+          await userService.saveUserData(response);
+        }
 
         if (!mounted) return;
         setState(() {
@@ -58,7 +71,6 @@ class _SignInScreenState extends State<SignInScreen> {
         );
       }
     } else {
-      // Enhancement 2 Legaspi
       setState(() {
         _isLoading = false;
       });
@@ -68,6 +80,8 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     // Enhancement 2 Legaspi: custom sign-in UI
+    final isFirebase = _loginType == LoginType.firebase;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F6FB),
       body: SafeArea(
@@ -101,11 +115,34 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 36.h),
+                  SizedBox(height: 20.h),
+                  // Enhancement 2 Legaspi: choose auth provider
+                  SegmentedButton<LoginType>(
+                    segments: const [
+                      ButtonSegment(
+                        value: LoginType.dummyJson,
+                        label: Text('DummyJSON'),
+                        icon: Icon(Icons.api),
+                      ),
+                      ButtonSegment(
+                        value: LoginType.firebase,
+                        label: Text('Firebase'),
+                        icon: Icon(Icons.local_fire_department),
+                      ),
+                    ],
+                    selected: {_loginType},
+                    onSelectionChanged: (value) {
+                      setState(() => _loginType = value.first);
+                    },
+                  ),
+                  SizedBox(height: 24.h),
                   TextFormField(
                     controller: _usernameController,
+                    keyboardType: isFirebase
+                        ? TextInputType.emailAddress
+                        : TextInputType.text,
                     decoration: InputDecoration(
-                      labelText: 'Username',
+                      labelText: isFirebase ? 'Email' : 'Username',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12.r),
                       ),
@@ -115,9 +152,14 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                     ),
                     validator: (value) {
-                      // Enhancement 2 Legaspi
                       if (value == null || value.trim().isEmpty) {
-                        return 'Please enter your username';
+                        return isFirebase
+                            ? 'Please enter your email'
+                            : 'Please enter your username';
+                      }
+                      if (isFirebase &&
+                          (!value.contains('@') || !value.contains('.'))) {
+                        return 'Enter a valid email';
                       }
                       return null;
                     },
@@ -149,7 +191,6 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                     ),
                     validator: (value) {
-                      // Enhancement 2 Legaspi
                       if (value == null || value.isEmpty) {
                         return 'Please enter your password';
                       }
@@ -184,6 +225,19 @@ class _SignInScreenState extends State<SignInScreen> {
                               color: Colors.white,
                               textAlign: TextAlign.center,
                             ),
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  // Enhancement 2 Legaspi
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/signup');
+                    },
+                    child: CustomText(
+                      text: 'Create a Firebase account',
+                      fontSize: 13.sp,
+                      color: const Color(0xFF1877F2),
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],

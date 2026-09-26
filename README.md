@@ -64,3 +64,20 @@ The exam extends Model–Service–Screen with **persistent authentication** and
 ### Posts, Comments, and Likes
 Posts on the profile come from the saved user id, not a hardcoded value. Opening a post loads comments for that post id. The like button updates local like state when tapped. Adding a comment sends `body`, `postId`, and the saved `userId` to DummyJSON’s add-comment endpoint, then refreshes the comment list.
 
+## Lab Activity 5: Discussion
+
+### DummyJSON vs Firebase Workflow (Sign In to Sign Up)
+This laboratory keeps both authentication paths inside one `UserService`:
+
+- **DummyJSON sign-in**: The UI collects username/password, then `loginUser` sends `POST /auth/login` to DummyJSON. The JSON response is mapped to the `User` model and stored in `SharedPreferences` with `loginType = dummyJson`. Splash later checks for a saved token and routes to home.
+- **Firebase sign-up**: The new `signup_screen` collects `fName`, `lName`, `age`, `contactNo`, `username`, `emailAddress`, and `password`. `createAccount` registers the user in Firebase Auth, `updateUsername` sets the display name, and the extra profile fields are saved locally with `loginType = firebase`.
+- **Firebase sign-in**: The sign-in screen can switch to Firebase mode and call `signIn(email, password)` through the Firebase Auth SDK. Session state is then based on `FirebaseAuth.currentUser`, with profile details still readable via `getUserData()`.
+
+Both flows end at the same home/profile UI, but profile details and available actions depend on `LoginType`.
+
+### Main Idea of the UserService Implementation
+`UserService` is the single auth gateway for the app. Older DummyJSON helpers (`loginUser`, `saveUserData`, `getUserData`, `isLoggedIn`, `logout`) remain, and Firebase methods from the handout are added underneath: `signIn`, `createAccount`, `signOut`, `updateUsername`, `deleteAccount`, and `resetPasswordFromCurrentPassword`. Screens do not talk to HTTP/Firebase directly; they call `UserService`, which decides how to authenticate, persist, update, or clear the session.
+
+### Benefits of Firebase in this Flutter Lab
+Firebase Auth provides real account creation, secure password handling, token refresh, and account lifecycle features (update username, change password, delete account) that DummyJSON only simulates. It also prepares the app for production-like auth while still allowing DummyJSON for API-driven demo data (posts/carts). That dual approach makes the laboratory useful for comparing API-token auth versus a managed identity provider.
+

@@ -9,7 +9,7 @@ import '../widgets/custom_font.dart';
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
-  // Enhancement 2 Legaspi
+  // Enhancement 1 / 3 Legaspi: Logout clears session and returns to login
   Future<void> _signOut(BuildContext context) async {
     try {
       await UserService().logout();

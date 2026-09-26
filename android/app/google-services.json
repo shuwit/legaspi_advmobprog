@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "834974107954",
+    "project_id": "legaspi-advwebprog-fireb",
+    "storage_bucket": "legaspi-advwebprog-fireb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:834974107954:android:84a8ebd9c9195184e72f2b",
+        "android_client_info": {
+          "package_name": "com.example.legaspi_advmobprog"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDiV1LrpWB3XNGri57eCYXVL_Ohb-cg4kc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
