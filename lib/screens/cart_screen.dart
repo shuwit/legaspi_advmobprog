@@ -16,7 +16,9 @@ class CartScreen extends StatefulWidget {
 
 class _CartScreenState extends State<CartScreen> {
   // Enhancement 3 Legaspi
-  late Future<Cart> _cartFuture;
+  Cart? _cart;
+  bool _isLoading = true;
+  String? _error;
   final CartService _cartService = CartService();
   final ProductService _productService = ProductService();
 
@@ -24,7 +26,68 @@ class _CartScreenState extends State<CartScreen> {
   void initState() {
     super.initState();
     // Enhancement 3 Legaspi: fetch cart by user id 5
-    _cartFuture = _cartService.getCartByUserId(5);
+    _loadCart();
+  }
+
+  Future<void> _loadCart() async {
+    try {
+      final cart = await _cartService.getCartByUserId(5);
+      if (!mounted) return;
+      setState(() {
+        _cart = cart;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _changeQuantity(int productId, int delta) {
+    final cart = _cart;
+    if (cart == null) return;
+
+    final products = cart.products.map((item) {
+      if (item.id != productId) return item;
+      final nextQuantity = item.quantity + delta;
+      if (nextQuantity < 1) return item;
+      return item.copyWith(quantity: nextQuantity);
+    }).toList();
+
+    setState(() {
+      _cart = cart.copyWith(products: products);
+    });
+  }
+
+  Widget _deleteBackground() {
+    return Container(
+      alignment: Alignment.centerRight,
+      margin: EdgeInsets.only(bottom: 16.h),
+      padding: EdgeInsets.only(right: 20.w),
+      decoration: BoxDecoration(
+        color: Colors.redAccent,
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Icon(
+        Icons.delete_outline,
+        color: Colors.white,
+        size: 28.sp,
+      ),
+    );
+  }
+
+  void _removeItem(int productId) {
+    final cart = _cart;
+    if (cart == null) return;
+
+    setState(() {
+      _cart = cart.copyWith(
+        products: cart.products.where((item) => item.id != productId).toList(),
+      );
+    });
   }
 
   void _navigateToDetailScreen(int productId) async {
@@ -49,36 +112,33 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: CustomText(
+          text: 'Error: $_error',
+          fontSize: 14.sp,
+        ),
+      );
+    }
+
+    final cart = _cart;
+    if (cart == null || cart.products.isEmpty) {
+      return Center(
+        child: CustomText(
+          text: 'Your cart is empty.',
+          fontSize: 14.sp,
+        ),
+      );
+    }
+
+    final deliveryFee = 0.00; // Mock delivery fee
+
     return SafeArea(
-      child: FutureBuilder<Cart>(
-        future: _cartFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: CustomText(
-                text: 'Error: ${snapshot.error}',
-                fontSize: 14.sp,
-              ),
-            );
-          }
-
-          if (!snapshot.hasData || snapshot.data!.products.isEmpty) {
-            return Center(
-              child: CustomText(
-                text: 'Your cart is empty.',
-                fontSize: 14.sp,
-              ),
-            );
-          }
-
-          final cart = snapshot.data!;
-          final deliveryFee = 0.00; // Mock delivery fee
-
-          return Column(
+      child: Column(
             children: [
               Expanded(
                 child: ListView.builder(
@@ -86,9 +146,12 @@ class _CartScreenState extends State<CartScreen> {
                   itemCount: cart.products.length,
                   itemBuilder: (context, index) {
                     final item = cart.products[index];
-                    return GestureDetector(
-                      // Enhancement 1 Legaspi
-                      onTap: () => _navigateToDetailScreen(item.id),
+                    return Dismissible(
+                      key: ValueKey(item.id),
+                      direction: DismissDirection.endToStart,
+                      background: _deleteBackground(),
+                      secondaryBackground: _deleteBackground(),
+                      onDismissed: (_) => _removeItem(item.id),
                       child: Card(
                         elevation: 1,
                         margin: EdgeInsets.only(bottom: 16.h),
@@ -99,51 +162,65 @@ class _CartScreenState extends State<CartScreen> {
                           padding: EdgeInsets.all(12.r),
                           child: Row(
                             children: [
-                              Image.network(
-                                item.thumbnail,
-                                width: 80.w,
-                                height: 80.h,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Icon(Icons.image, size: 40.sp),
-                              ),
-                              SizedBox(width: 12.w),
                               Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    CustomText(
-                                      text: item.title,
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.bold,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    SizedBox(height: 8.h),
-                                    CustomText(
-                                      text: '\$${item.price.toStringAsFixed(2)}',
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.orangeAccent,
-                                    ),
-                                    SizedBox(height: 4.h),
-                                    CustomText(
-                                      text: '${item.discountPercentage}% off • \$${item.discountedTotal.toStringAsFixed(2)} total',
-                                      fontSize: 12.sp,
-                                      color: Colors.grey,
-                                    ),
-                                  ],
+                                child: GestureDetector(
+                                  // Enhancement 1 Legaspi
+                                  onTap: () => _navigateToDetailScreen(item.id),
+                                  child: Row(
+                                    children: [
+                                      Image.network(
+                                        item.thumbnail,
+                                        width: 80.w,
+                                        height: 80.h,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Icon(Icons.image, size: 40.sp),
+                                      ),
+                                      SizedBox(width: 12.w),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            CustomText(
+                                              text: item.title,
+                                              fontSize: 16.sp,
+                                              fontWeight: FontWeight.bold,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            SizedBox(height: 8.h),
+                                            CustomText(
+                                              text: '\$${item.price.toStringAsFixed(2)}',
+                                              fontSize: 16.sp,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.orangeAccent,
+                                            ),
+                                            SizedBox(height: 4.h),
+                                            CustomText(
+                                              text: '${item.discountPercentage}% off • \$${item.discountedTotal.toStringAsFixed(2)} total',
+                                              fontSize: 12.sp,
+                                              color: Colors.grey,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                               Column(
                                 children: [
-                                  Container(
-                                    width: 32.w,
-                                    height: 32.h,
-                                    decoration: BoxDecoration(
-                                      color: Colors.amber,
-                                      borderRadius: BorderRadius.circular(8.r),
+                                  GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () => _changeQuantity(item.id, 1),
+                                    child: Container(
+                                      width: 32.w,
+                                      height: 32.h,
+                                      decoration: BoxDecoration(
+                                        color: Colors.amber,
+                                        borderRadius: BorderRadius.circular(8.r),
+                                      ),
+                                      child: Icon(Icons.add, size: 20.sp, color: Colors.black87),
                                     ),
-                                    child: Icon(Icons.add, size: 20.sp, color: Colors.black87),
                                   ),
                                   Padding(
                                     padding: EdgeInsets.symmetric(vertical: 8.h),
@@ -153,14 +230,18 @@ class _CartScreenState extends State<CartScreen> {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  Container(
-                                    width: 32.w,
-                                    height: 32.h,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[300],
-                                      borderRadius: BorderRadius.circular(8.r),
+                                  GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () => _changeQuantity(item.id, -1),
+                                    child: Container(
+                                      width: 32.w,
+                                      height: 32.h,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[300],
+                                        borderRadius: BorderRadius.circular(8.r),
+                                      ),
+                                      child: Icon(Icons.remove, size: 20.sp, color: Colors.black87),
                                     ),
-                                    child: Icon(Icons.remove, size: 20.sp, color: Colors.black87),
                                   ),
                                 ],
                               ),
@@ -226,8 +307,6 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ),
             ],
-          );
-        },
       ),
     );
   }

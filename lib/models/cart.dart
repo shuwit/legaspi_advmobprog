@@ -43,6 +43,28 @@ class Cart {
       'totalQuantity': totalQuantity,
     };
   }
+
+  Cart copyWith({List<CartProduct>? products}) {
+    final nextProducts = products ?? this.products;
+    final nextTotal =
+        nextProducts.fold<double>(0, (sum, item) => sum + item.total);
+    final nextDiscountedTotal = nextProducts.fold<double>(
+      0,
+      (sum, item) => sum + item.discountedTotal,
+    );
+    final nextQuantity =
+        nextProducts.fold<int>(0, (sum, item) => sum + item.quantity);
+
+    return Cart(
+      id: id,
+      products: nextProducts,
+      total: nextTotal,
+      discountedTotal: nextDiscountedTotal,
+      userId: userId,
+      totalProducts: nextProducts.length,
+      totalQuantity: nextQuantity,
+    );
+  }
 }
 
 class CartProduct {
@@ -91,5 +113,23 @@ class CartProduct {
       'discountedTotal': discountedTotal,
       'thumbnail': thumbnail,
     };
+  }
+
+  CartProduct copyWith({int? quantity}) {
+    final nextQuantity = quantity ?? this.quantity;
+    final lineTotal = price * nextQuantity;
+    final discountedLineTotal =
+        lineTotal * (1 - (discountPercentage / 100));
+
+    return CartProduct(
+      id: id,
+      title: title,
+      price: price,
+      quantity: nextQuantity,
+      total: lineTotal,
+      discountPercentage: discountPercentage,
+      discountedTotal: discountedLineTotal,
+      thumbnail: thumbnail,
+    );
   }
 }
